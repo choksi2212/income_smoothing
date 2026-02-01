@@ -1,0 +1,120 @@
+.dashboard {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  gap: 1rem;
+}
+
+.header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.header p {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+}
+
+.syncBtn {
+  padding: 0.75rem 1.5rem;
+  background-color: var(--color-primary);
+  color: var(--button-text);
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.syncBtn:hover:not(:disabled) {
+  background-color: var(--color-primary-dark);
+  transform: translateY(-1px);
+}
+
+.syncBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.predictionDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.predictionRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.9375rem;
+}
+
+.predictionRow:last-child {
+  border-bottom: none;
+}
+
+.predictionRow span:first-child {
+  color: var(--text-secondary);
+}
+
+.predictionRow span:last-child {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.positive {
+  color: var(--color-positive) !important;
+}
+
+.negative {
+  color: var(--color-negative) !important;
+}
+
+.explanation {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: rgba(243, 156, 18, 0.1);
+  border-radius: 0.5rem;
+  align-items: flex-start;
+}
+
+.explanation p {
+  flex: 1;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+  }
+  
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .syncBtn {
+    width: 100%;
+  }
+}
