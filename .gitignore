@@ -90,3 +90,11 @@ pnpm-lock.yaml
 # Production
 /build
 /dist
+
+# Prisma
+prisma/.env
+prisma/migrations/
+.prisma/
+
+# Zip files
+*.zip

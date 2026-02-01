@@ -27,6 +27,19 @@ A production-ready Indian fintech platform for freelancers and gig workers to sm
 - Node.js 18+
 - PostgreSQL 14+
 
+### Database Options
+
+This project supports **two database configurations**:
+
+1. **SQLAlchemy** (Default - Python ORM)
+2. **Prisma** (Alternative - Easier setup, better tooling)
+
+Both connect to the same PostgreSQL database. Choose based on your preference:
+- Use SQLAlchemy if you're comfortable with Python ORMs
+- Use Prisma for easier setup and visual database browser
+
+See [PRISMA_SETUP.md](PRISMA_SETUP.md) for Prisma installation.
+
 ### Installation
 
 1. **Clone the repository**

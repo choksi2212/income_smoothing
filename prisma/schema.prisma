@@ -1,0 +1,315 @@
+// Prisma Schema - Alternative to SQLAlchemy
+// This mirrors the exact database structure from app/models.py
+// To use: npm install prisma @prisma/client
+// Then: npx prisma generate && npx prisma db push
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum TransactionType {
+  credit
+  debit
+}
+
+enum MerchantCategory {
+  freelancing
+  platform_payout
+  upi_credit
+  rent
+  food_delivery
+  mobile_recharge
+  travel
+  utilities
+  shopping
+  entertainment
+  other
+}
+
+enum RiskLevel {
+  low
+  medium
+  high
+}
+
+enum InsightType {
+  volatility_spike
+  source_concentration
+  buffer_draw_frequent
+  expense_creep
+  low_income_warning
+  positive_trend
+}
+
+enum InsightSeverity {
+  info
+  warning
+  critical
+}
+
+// Models
+model User {
+  user_id          String   @id @default(uuid()) @db.Uuid
+  email            String   @unique @db.VarChar(255)
+  hashed_password  String   @db.VarChar(255)
+  full_name        String   @db.VarChar(255)
+  phone            String?  @db.VarChar(15)
+  is_active        Boolean  @default(true)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  // Relations
+  profile              UserProfile?
+  bank_accounts        BankAccount[]
+  transactions         Transaction[]
+  income_sources       IncomeSource[]
+  ai_features          AIFeature[]
+  cashflow_predictions CashflowPrediction[]
+  smoothing_buffer     SmoothingBuffer?
+  weekly_releases      WeeklyRelease[]
+  ai_insights          AIInsight[]
+  audit_logs           AuditLog[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model UserProfile {
+  profile_id                 String   @id @default(uuid()) @db.Uuid
+  user_id                    String   @unique @db.Uuid
+  occupation                 String?  @db.VarChar(100)
+  primary_income_type        String?  @db.VarChar(100)
+  monthly_fixed_expenses_inr Decimal  @default(0) @db.Decimal(12, 2)
+  risk_tolerance             String   @default("conservative") @db.VarChar(20)
+  created_at                 DateTime @default(now())
+  updated_at                 DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [user_id], references: [user_id])
+
+  @@map("user_profiles")
+}
+
+model BankAccount {
+  account_id               String   @id @default(uuid()) @db.Uuid
+  user_id                  String   @db.Uuid
+  account_number_encrypted String   @db.VarChar(255)
+  bank_name                String   @db.VarChar(100)
+  account_type             String   @default("savings") @db.VarChar(50)
+  is_primary               Boolean  @default(false)
+  current_balance_inr      Decimal  @default(0) @db.Decimal(12, 2)
+  last_synced_at           DateTime?
+  created_at               DateTime @default(now())
+  updated_at               DateTime @updatedAt
+
+  // Relations
+  user         User          @relation(fields: [user_id], references: [user_id])
+  transactions Transaction[]
+
+  @@index([user_id])
+  @@map("bank_accounts")
+}
+
+model Transaction {
+  transaction_id     String          @id @default(uuid()) @db.Uuid
+  user_id            String          @db.Uuid
+  account_id         String          @db.Uuid
+  txn_timestamp      DateTime
+  amount_inr         Decimal         @db.Decimal(12, 2)
+  txn_type           TransactionType
+  balance_after_txn  Decimal         @db.Decimal(12, 2)
+  description        String          @db.Text
+  merchant_category  MerchantCategory
+  is_income          Boolean
+  created_at         DateTime        @default(now())
+
+  // Relations
+  user    User        @relation(fields: [user_id], references: [user_id])
+  account BankAccount @relation(fields: [account_id], references: [account_id])
+
+  @@index([user_id, txn_timestamp])
+  @@index([user_id, txn_type])
+  @@index([txn_timestamp])
+  @@map("transactions")
+}
+
+model IncomeSource {
+  source_id         String    @id @default(uuid()) @db.Uuid
+  user_id           String    @db.Uuid
+  source_name       String    @db.VarChar(100)
+  source_category   String    @db.VarChar(50)
+  avg_monthly_inr   Decimal   @default(0) @db.Decimal(12, 2)
+  contribution_pct  Decimal   @default(0) @db.Decimal(5, 2)
+  stability_score   Decimal   @default(0) @db.Decimal(3, 2)
+  last_payment_date DateTime?
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  // Relations
+  user User @relation(fields: [user_id], references: [user_id])
+
+  @@index([user_id])
+  @@map("income_sources")
+}
+
+model AIFeature {
+  feature_id              String   @id @default(uuid()) @db.Uuid
+  user_id                 String   @db.Uuid
+  week_start_date         DateTime
+  total_income_inr        Decimal  @default(0) @db.Decimal(12, 2)
+  total_expense_inr       Decimal  @default(0) @db.Decimal(12, 2)
+  net_cashflow_inr        Decimal  @default(0) @db.Decimal(12, 2)
+  avg_daily_income        Decimal  @default(0) @db.Decimal(12, 2)
+  income_std_dev          Decimal  @default(0) @db.Decimal(12, 2)
+  income_volatility_ratio Decimal  @default(0) @db.Decimal(8, 4)
+  days_with_income        Int      @default(0)
+  days_without_income     Int      @default(0)
+  income_source_count     Int      @default(0)
+  top_income_source_pct   Decimal  @default(0) @db.Decimal(5, 2)
+  avg_daily_expense       Decimal  @default(0) @db.Decimal(12, 2)
+  expense_std_dev         Decimal  @default(0) @db.Decimal(12, 2)
+  buffer_utilization_rate Decimal  @default(0) @db.Decimal(5, 2)
+  overspend_events_count  Int      @default(0)
+  created_at              DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [user_id], references: [user_id])
+
+  @@index([user_id, week_start_date])
+  @@map("ai_features")
+}
+
+model CashflowPrediction {
+  prediction_id          String    @id @default(uuid()) @db.Uuid
+  user_id                String    @db.Uuid
+  prediction_date        DateTime
+  prediction_window_days Int
+  expected_inflow_inr    Decimal   @db.Decimal(12, 2)
+  expected_outflow_inr   Decimal   @db.Decimal(12, 2)
+  net_cashflow_inr       Decimal   @db.Decimal(12, 2)
+  lower_bound_inr        Decimal   @db.Decimal(12, 2)
+  upper_bound_inr        Decimal   @db.Decimal(12, 2)
+  risk_level             RiskLevel
+  model_used             String    @db.VarChar(50)
+  confidence_score       Decimal   @default(0) @db.Decimal(3, 2)
+  created_at             DateTime  @default(now())
+
+  // Relations
+  user User @relation(fields: [user_id], references: [user_id])
+
+  @@index([user_id, prediction_date])
+  @@map("cashflow_predictions")
+}
+
+model SmoothingBuffer {
+  buffer_id                 String    @id @default(uuid()) @db.Uuid
+  user_id                   String    @unique @db.Uuid
+  buffer_balance_inr        Decimal   @default(0) @db.Decimal(12, 2)
+  total_deposited_inr       Decimal   @default(0) @db.Decimal(12, 2)
+  total_released_inr        Decimal   @default(0) @db.Decimal(12, 2)
+  buffer_risk_score         Decimal   @default(0) @db.Decimal(3, 2)
+  min_buffer_threshold_inr  Decimal   @default(0) @db.Decimal(12, 2)
+  max_buffer_capacity_inr   Decimal   @default(0) @db.Decimal(12, 2)
+  last_deposit_date         DateTime?
+  last_release_date         DateTime?
+  created_at                DateTime  @default(now())
+  updated_at                DateTime  @updatedAt
+
+  // Relations
+  user User @relation(fields: [user_id], references: [user_id])
+
+  @@map("smoothing_buffers")
+}
+
+model WeeklyRelease {
+  release_id                     String    @id @default(uuid()) @db.Uuid
+  user_id                        String    @db.Uuid
+  week_start_date                DateTime
+  recommended_weekly_release_inr Decimal   @db.Decimal(12, 2)
+  actual_release_inr             Decimal   @default(0) @db.Decimal(12, 2)
+  buffer_balance_before_inr      Decimal   @db.Decimal(12, 2)
+  buffer_balance_after_inr       Decimal   @db.Decimal(12, 2)
+  is_released                    Boolean   @default(false)
+  released_at                    DateTime?
+  created_at                     DateTime  @default(now())
+
+  // Relations
+  user User @relation(fields: [user_id], references: [user_id])
+
+  @@index([user_id, week_start_date])
+  @@map("weekly_releases")
+}
+
+model AIInsight {
+  insight_id         String          @id @default(uuid()) @db.Uuid
+  user_id            String          @db.Uuid
+  insight_type       InsightType
+  severity           InsightSeverity
+  explanation_text   String          @db.Text
+  supporting_metrics Json
+  is_read            Boolean         @default(false)
+  is_dismissed       Boolean         @default(false)
+  created_at         DateTime        @default(now())
+
+  // Relations
+  user User @relation(fields: [user_id], references: [user_id])
+
+  @@index([user_id, created_at])
+  @@map("ai_insights")
+}
+
+model ModelVersion {
+  version_id      String   @id @default(uuid()) @db.Uuid
+  model_name      String   @db.VarChar(100)
+  version_number  String   @db.VarChar(20)
+  algorithm       String   @db.VarChar(50)
+  parameters      Json?
+  training_date   DateTime
+  is_active       Boolean  @default(true)
+  created_at      DateTime @default(now())
+
+  // Relations
+  metrics ModelMetric[]
+
+  @@map("model_versions")
+}
+
+model ModelMetric {
+  metric_id       String   @id @default(uuid()) @db.Uuid
+  version_id      String   @db.Uuid
+  metric_name     String   @db.VarChar(100)
+  metric_value    Decimal  @db.Decimal(12, 4)
+  evaluation_date DateTime
+  created_at      DateTime @default(now())
+
+  // Relations
+  model_version ModelVersion @relation(fields: [version_id], references: [version_id])
+
+  @@map("model_metrics")
+}
+
+model AuditLog {
+  log_id      String    @id @default(uuid()) @db.Uuid
+  user_id     String?   @db.Uuid
+  action      String    @db.VarChar(100)
+  entity_type String    @db.VarChar(50)
+  entity_id   String?   @db.Uuid
+  old_values  Json?
+  new_values  Json?
+  ip_address  String?   @db.VarChar(45)
+  user_agent  String?   @db.Text
+  created_at  DateTime  @default(now())
+
+  // Relations
+  user User? @relation(fields: [user_id], references: [user_id])
+
+  @@index([user_id, created_at])
+  @@index([created_at])
+  @@map("audit_logs")
+}

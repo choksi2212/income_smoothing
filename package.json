@@ -1,0 +1,25 @@
+{
+  "name": "income-smoothing-prisma",
+  "version": "1.0.0",
+  "description": "Prisma database client for Income Smoothing Platform",
+  "scripts": {
+    "prisma:pull": "prisma db pull",
+    "prisma:generate": "prisma generate",
+    "prisma:studio": "prisma studio",
+    "prisma:setup": "npm run prisma:pull && npm run prisma:generate",
+    "prisma:push": "prisma db push"
+  },
+  "keywords": [
+    "prisma",
+    "postgresql",
+    "database"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "prisma": "^5.22.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0"
+  }
+}
